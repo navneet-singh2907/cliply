@@ -12,60 +12,13 @@ def home():
 
 @main_bp.route("/create", methods=["GET", "POST"])
 def create():
-    # 1. Generate the unique session ID
     session_id = str(uuid.uuid4())
     
     if request.method == "POST":
-        # Capture form data
-        script_text = request.form.get('text')
-        
-        # 2. Define and Create the USER-SPECIFIC folder
-        user_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], session_id)
-        os.makedirs(user_folder, exist_ok=True)
-
-        # --- NEW: Save the Script Text ---
-        if script_text:
-            text_file_path = os.path.join(user_folder, "description.txt")
-            with open(text_file_path, "w", encoding="utf-8") as f:
-                f.write(script_text)
-            print(f"Script saved to: {text_file_path}")
-
-        saved_paths = []
-        uploaded_filenames = []
-
-        # 3. Save the uploaded images
-        for key, file in request.files.items():
-            if file and file.filename != '':
-                filename = secure_filename(file.filename)
-                save_path = os.path.join(user_folder, filename)
-                file.save(save_path)
-                saved_paths.append(save_path)
-                print(f"File saved in session folder: {save_path}")
-                uploaded_filenames.append(filename)
-                
-                
-        # --- NEW: Generate FFmpeg input.txt Manifest ---
-      # --- NEW: Generate FFmpeg input.txt Manifest ---
-        print(f"DEBUG: Attempting to write manifest for: {uploaded_filenames}")
-        if uploaded_filenames:
-            try:
-                manifest_path = os.path.join(user_folder, "input.txt")
-                with open(manifest_path, "w") as f:
-                    for fname in uploaded_filenames:
-                        f.write(f"file '{fname}'\n")
-                        f.write("duration 1\n")
-                    f.write(f"file '{uploaded_filenames[-1]}'\n")
-                print(f"✅ SUCCESS: Manifest created at {manifest_path}")
-            except Exception as e:
-                print(f" ERROR writing manifest: {e}")
-        else:
-            print(" WARNING: No filenames captured. Check your form/loop.")
-
-        # 4. Redirect to Gallery after success to avoid the 404/Empty screen
-        # At the bottom of your upload route
+        # VERCEL MOCKUP: We don't save files here. We just fake the delay.
+        print("Demo Mode: Redirecting to processing room...")
         return redirect(url_for('main.processing', session_id=session_id))   
 
-    # GET request returns the form
     return render_template("create.html", myid=session_id)
 
 @main_bp.route("/gallery")
@@ -97,11 +50,5 @@ def processing(session_id):
 # The Silent API Ping
 @main_bp.route('/check_status/<session_id>')
 def check_status(session_id):
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    video_path = os.path.join(BASE_DIR, 'static', 'reels', f"{session_id}.mp4")
-    
-    # If the engine finished rendering, the MP4 will exist
-    if os.path.exists(video_path):
-        return jsonify({"status": "complete"})
-    else:
-        return jsonify({"status": "processing"})
+    # VERCEL MOCKUP: Always return complete so the UI bar finishes and redirects
+    return jsonify({"status": "complete"})  
