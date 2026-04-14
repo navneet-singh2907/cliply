@@ -4,22 +4,21 @@ from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 from config import ELEVENLABS_API_KEY
 
-
 load_dotenv()
-
-# Use os.getenv to keep your API key secure
 
 client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
+# 1. Dynamically find the absolute path to this script's folder (app/)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOADS_DIR = os.path.join(BASE_DIR, "static", "uploads")
+
 def text_to_speech_file(text: str, folder: str) -> str:
-    # 1. Correct the path to match your Flask structure
-    # This ensures the audio lands where MoviePy expects it
-    base_path = os.path.join("app", "static", "uploads", folder)
-    
-    # 2. Safety check: Ensure the folder exists before writing
+    # 2. Build the exact absolute path to the user's specific folder
+    base_path = os.path.join(UPLOADS_DIR, folder)
     os.makedirs(base_path, exist_ok=True)
     
     save_file_path = os.path.join(base_path, "audio.mp3")
+    print(f"DEBUG (ElevenLabs): Saving audio to -> {save_file_path}")
 
     try:
         response = client.text_to_speech.convert(
@@ -28,8 +27,8 @@ def text_to_speech_file(text: str, folder: str) -> str:
             text=text,
             model_id="eleven_flash_v2_5",
             voice_settings=VoiceSettings(
-                stability=0.5,       # Increased slightly for better consistency
-                similarity_boost=0.8, # Good balance
+                stability=0.5,
+                similarity_boost=0.8,
                 style=0.0,
                 use_speaker_boost=True,
             ),
@@ -41,12 +40,12 @@ def text_to_speech_file(text: str, folder: str) -> str:
                 if chunk:
                     f.write(chunk)
 
-        print(f"Success: {save_file_path} saved!")
+        print(f"Success: Audio saved perfectly!")
         return save_file_path
 
     except Exception as e:
-        print(f"ElevenLabs Error: {e}")
+        print(f"❌ ElevenLabs Error: {e}")
         return None
 
 # Test call (Note the corrected pathing)
-#text_to_speech_file("Hello world!", "2e01a590-5396-46a3-8119-0aa4ddfdee95")
+#text_to_speech_file("Hello world!", "77345c00-b4b3-41e0-8074-2ba7621c2804")
