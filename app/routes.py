@@ -30,6 +30,7 @@ def create():
             print(f"Script saved to: {text_file_path}")
 
         saved_paths = []
+        uploaded_filenames = []
 
         # 3. Save the uploaded images
         for key, file in request.files.items():
@@ -39,6 +40,25 @@ def create():
                 file.save(save_path)
                 saved_paths.append(save_path)
                 print(f"File saved in session folder: {save_path}")
+                uploaded_filenames.append(filename)
+                
+                
+        # --- NEW: Generate FFmpeg input.txt Manifest ---
+      # --- NEW: Generate FFmpeg input.txt Manifest ---
+        print(f"DEBUG: Attempting to write manifest for: {uploaded_filenames}")
+        if uploaded_filenames:
+            try:
+                manifest_path = os.path.join(user_folder, "input.txt")
+                with open(manifest_path, "w") as f:
+                    for fname in uploaded_filenames:
+                        f.write(f"file '{fname}'\n")
+                        f.write("duration 1\n")
+                    f.write(f"file '{uploaded_filenames[-1]}'\n")
+                print(f"✅ SUCCESS: Manifest created at {manifest_path}")
+            except Exception as e:
+                print(f"❌ ERROR writing manifest: {e}")
+        else:
+            print("⚠️ WARNING: No filenames captured. Check your form/loop.")
 
         # 4. Redirect to Gallery after success to avoid the 404/Empty screen
         return redirect(url_for('main.gallery'))
