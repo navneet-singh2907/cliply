@@ -2,6 +2,7 @@ import uuid
 import os
 from flask import Blueprint, render_template, request, current_app, redirect, url_for
 from werkzeug.utils import secure_filename
+from flask import jsonify
 
 main_bp = Blueprint('main', __name__)
 
@@ -56,25 +57,26 @@ def create():
                     f.write(f"file '{uploaded_filenames[-1]}'\n")
                 print(f"✅ SUCCESS: Manifest created at {manifest_path}")
             except Exception as e:
-                print(f"❌ ERROR writing manifest: {e}")
+                print(f" ERROR writing manifest: {e}")
         else:
-            print("⚠️ WARNING: No filenames captured. Check your form/loop.")
+            print(" WARNING: No filenames captured. Check your form/loop.")
 
         # 4. Redirect to Gallery after success to avoid the 404/Empty screen
-        return redirect(url_for('main.gallery'))
+        # At the bottom of your upload route
+        return redirect(url_for('main.processing', session_id=session_id))   
 
     # GET request returns the form
     return render_template("create.html", myid=session_id)
 
 @main_bp.route("/gallery")
 def gallery():
-    # 1. Find the reels folder securely
+    # Find the reels folder securely
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     reels_dir = os.path.join(BASE_DIR, 'static', 'reels')
     
     videos = []
     
-    # 2. Scan the folder for .mp4 files
+    # Scan the folder for .mp4 files
     if os.path.exists(reels_dir):
         # List all files and keep only the MP4s
         videos = [f for f in os.listdir(reels_dir) if f.endswith('.mp4')]
@@ -82,6 +84,24 @@ def gallery():
         # Optional: Sort them by creation time so the newest is at the top
         videos.sort(key=lambda x: os.path.getmtime(os.path.join(reels_dir, x)), reverse=True)
 
-    # 3. Pass the list of video names to the HTML template
+    # Pass the list of video names to the HTML template
     return render_template('gallery.html', videos=videos)
     
+    
+    # The Waiting Room Page
+@main_bp.route('/processing/<session_id>')
+def processing(session_id):
+    # This just loads the HTML and passes the UUID to it
+    return render_template('processing.html', session_id=session_id)
+
+# The Silent API Ping
+@main_bp.route('/check_status/<session_id>')
+def check_status(session_id):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    video_path = os.path.join(BASE_DIR, 'static', 'reels', f"{session_id}.mp4")
+    
+    # If the engine finished rendering, the MP4 will exist
+    if os.path.exists(video_path):
+        return jsonify({"status": "complete"})
+    else:
+        return jsonify({"status": "processing"})

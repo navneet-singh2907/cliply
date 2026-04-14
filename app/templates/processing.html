@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliply - Generating Reel...</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #1e1e1e;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            width: 80%;
+            max-width: 500px;
+        }
+        /* The Progress Bar Styling */
+        .progress-wrapper {
+            width: 100%;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            height: 20px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00ff88;
+            transition: width 0.5s ease;
+        }
+        .status-text {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🎬 Manufacturing AI Reel</h2>
+        <p>Your media is currently in the rendering engine...</p>
+        
+        <div class="progress-wrapper">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+        
+        <div id="statusText" class="status-text">Initializing pipeline...</div>
+    </div>
+
+    <script>
+        // Get the UUID that Flask passed to this page
+        const sessionId = "{{ session_id }}";
+        
+        // Fake visual progress to keep the user entertained
+        let fakeProgress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+
+        const visualInterval = setInterval(() => {
+            if (fakeProgress < 90) { // Stall at 90% until actually done
+                fakeProgress += Math.random() * 5;
+                progressBar.style.width = fakeProgress + '%';
+                
+                if (fakeProgress > 20) statusText.innerText = "Synthesizing AI Voiceover...";
+                if (fakeProgress > 50) statusText.innerText = "Conforming Aspect Ratios...";
+                if (fakeProgress > 75) statusText.innerText = "Stitching Final MP4 with FFmpeg...";
+            }
+        }, 800);
+
+        // The REAL check: Ask the Flask API every 2 seconds
+        const checkInterval = setInterval(() => {
+            fetch(`/check_status/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "complete") {
+                        // Stop asking
+                        clearInterval(checkInterval);
+                        clearInterval(visualInterval);
+                        
+                        // Force bar to 100% and redirect
+                        progressBar.style.width = '100%';
+                        statusText.innerText = "Complete! Redirecting to Gallery...";
+                        statusText.style.color = "#00ff88";
+                        
+                        setTimeout(() => {
+                            window.location.href = "/gallery";
+                        }, 1000); // 1 second delay so they see the green text
+                    }
+                })
+                .catch(err => console.error("Polling error:", err));
+        }, 2000);
+    </script>
+</body>
+</html>
