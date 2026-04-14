@@ -68,4 +68,20 @@ def create():
 
 @main_bp.route("/gallery")
 def gallery():
-    return render_template("gallery.html")
+    # 1. Find the reels folder securely
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    reels_dir = os.path.join(BASE_DIR, 'static', 'reels')
+    
+    videos = []
+    
+    # 2. Scan the folder for .mp4 files
+    if os.path.exists(reels_dir):
+        # List all files and keep only the MP4s
+        videos = [f for f in os.listdir(reels_dir) if f.endswith('.mp4')]
+        
+        # Optional: Sort them by creation time so the newest is at the top
+        videos.sort(key=lambda x: os.path.getmtime(os.path.join(reels_dir, x)), reverse=True)
+
+    # 3. Pass the list of video names to the HTML template
+    return render_template('gallery.html', videos=videos)
+    
