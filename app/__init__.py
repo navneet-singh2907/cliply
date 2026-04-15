@@ -12,7 +12,7 @@ def create_app():
     app.config['SECRET_KEY'] = 'dev-key-123'
     app.config['UPLOAD_FOLDER'] = os.path.join(static_dir, 'uploads')
     
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    #os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     from .routes import main_bp
     app.register_blueprint(main_bp)
